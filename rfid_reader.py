@@ -4,12 +4,14 @@ from time import sleep
 from repositories.RFIds import RFIdsRepository
 from os import system
 from utils.isAboveTenPercent import isAboveTenPercent
+import serial
 
 DEC_ID = 291543776768
 INC_ID = 1032739306
 
 idStorage = RFIdsRepository()
 rfidReader = SimpleMFRC522()
+serial = serial.Serial('/dev/ttyACM0', 115280)
 
 count = 0
 
@@ -25,13 +27,20 @@ try:
         tag, text = rfidReader.read()
         sleep(1)
 
-        if(INC_ID == tag and isAboveTenPercent(count + 1, maxValue)):
+        if(INC_ID == tag and not isAboveTenPercent(count + 1, maxValue)):
             count += 1
         elif(tag != INC_ID and count != 0):
             count -= 1
+
+        if isAboveTenPercent(count + 1, maxValue):
+            serial.write('ON'.encode('utf-8'))
+            serial.reset_input_buffer()
+        else:
+            serial.write('OFF'.encode('utf-8'))
+            serial.reset_input_buffer()
         
 except:
     print("DEU RUIM")
 finally:
-    print(idStorage.getAll())
+    serial.close()
     GPIO.cleanup()
