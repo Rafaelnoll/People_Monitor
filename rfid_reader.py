@@ -11,7 +11,7 @@ INC_ID = 1032739306
 
 idStorage = RFIdsRepository()
 rfidReader = SimpleMFRC522()
-serial = serial.Serial('/dev/ttyACM0', 115280)
+serial = serial.Serial('/dev/ttyACM0', 9600)
 
 count = 0
 
@@ -23,6 +23,9 @@ try:
         
         system("clear")
         print(f'Contador: {count}')
+
+        if serial.in_waiting > 0:
+            print(serial.readline())
         
         tag, text = rfidReader.read()
         sleep(1)
@@ -31,14 +34,10 @@ try:
             count += 1
         elif(tag != INC_ID and count != 0):
             count -= 1
+            
+        serial.write(f'{count}'.encode('utf-8'))
+        serial.reset_input_buffer()
 
-        if isAboveTenPercent(count + 1, maxValue):
-            serial.write('ON'.encode('utf-8'))
-            serial.reset_input_buffer()
-        else:
-            serial.write('OFF'.encode('utf-8'))
-            serial.reset_input_buffer()
-        
 except:
     print("DEU RUIM")
 finally:
