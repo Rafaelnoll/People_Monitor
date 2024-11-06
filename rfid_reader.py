@@ -3,7 +3,6 @@ from mfrc522 import SimpleMFRC522
 from time import sleep
 from repositories.RFIds import RFIdsRepository
 from os import system
-from utils.isAboveTenPercent import isAboveTenPercent
 import serial
 
 DEC_ID = 291543776768
@@ -18,6 +17,7 @@ count = 0
 try:
 
     maxValue = int(input('Qual o total de pessoas permitidas? '))
+    maxValueMoreTenPercent = int(maxValue + (maxValue * 0.1))
 
     while(True):
         
@@ -30,16 +30,19 @@ try:
         tag, text = rfidReader.read()
         sleep(1)
 
-        if(INC_ID == tag and not isAboveTenPercent(count + 1, maxValue)):
+        if(INC_ID == tag):
             count += 1
         elif(tag != INC_ID and count != 0):
             count -= 1
             
-        serial.write(f'{count}'.encode('utf-8'))
+        serial.write(f'{count} {maxValueMoreTenPercent}'.encode('utf-8'))
         serial.reset_input_buffer()
 
+        if(count > maxValueMoreTenPercent):
+            count = maxValueMoreTenPercent
+
 except:
-    print("DEU RUIM")
+    print("Parando operações...")
 finally:
     serial.close()
     GPIO.cleanup()
